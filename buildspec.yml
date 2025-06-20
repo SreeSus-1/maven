@@ -4,10 +4,25 @@ phases:
   install:
     runtime-versions:
       java: corretto11
+    commands:
+      - echo Installing dependencies...
+      - mvn clean install
+
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 943814146142.dkr.ecr.us-east-2.amazonaws.com
+
   build:
     commands:
-      - echo "Building with Maven"
-      - mvn clean package
+      - echo Building Docker image...
+      - docker build -t vs_ecr .
+      - docker tag vs_ecr:latest 943814146142.dkr.ecr.us-east-2.amazonaws.com/vs_ecr:latest
+
+  post_build:
+    commands:
+      - echo Pushing Docker image to ECR...
+      - docker push 943814146142.dkr.ecr.us-east-2.amazonaws.com/vs_ecr:latest
+
 artifacts:
-  files:
-    - target/*.jar
+  files: '**/*'
